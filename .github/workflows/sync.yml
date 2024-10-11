@@ -1,0 +1,28 @@
+name: Sync Codeberg to GitHub
+
+# 设定工作流触发条件，这里设置为每天凌晨同步一次
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天 UTC 时间凌晨 0 点
+  workflow_dispatch:  # 也可以手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Repository (Codeberg)
+        # 使用 Git 直接克隆源仓库
+        run: |
+          git clone --mirror https://codeberg.org/forgejo/forgejo.git source-repo
+
+      - name: Push to GitHub Repository
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          cd source-repo
+          git push --mirror https://x-access-token:${GH_PAT}@github.com/tameslabs/forgit.git
+
+      - name: Cleanup
+        run: |
+          rm -rf source-repo
